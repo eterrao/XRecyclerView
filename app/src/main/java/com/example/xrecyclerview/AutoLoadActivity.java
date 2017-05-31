@@ -2,36 +2,44 @@ package com.example.xrecyclerview;
 
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.constraint.ConstraintLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 
 import com.jcodecraeer.xrecyclerview.ProgressStyle;
 import com.jcodecraeer.xrecyclerview.XRecyclerView;
 
-import java.util.ArrayList;
+import java.util.LinkedList;
 
-public class LinearActivity extends AppCompatActivity {
-    private XRecyclerView mRecyclerView;
-    private MyAdapter mAdapter;
-    private ArrayList<String> listData;
+import butterknife.BindView;
+import butterknife.ButterKnife;
+
+public class AutoLoadActivity extends AppCompatActivity {
+
+    @BindView(R.id.recyclerview)
+    XRecyclerView mRecyclerView;
+    @BindView(R.id.cl_auto_load)
+    ConstraintLayout clAutoLoad;
+
+    private MyAutoLoadAdapter mAdapter;
+    private LinkedList<String> listData;
     private int refreshTime = 0;
     private int times = 0;
+    private int counter = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_recyclerview);
-        final Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        setContentView(R.layout.activity_auto_load);
+        ButterKnife.bind(this);
 
-        mRecyclerView = (XRecyclerView) this.findViewById(R.id.recyclerview);
+        initViews();
+    }
+
+    private void initViews() {
         LinearLayoutManager layoutManager = new LinearLayoutManager(this);
         layoutManager.setOrientation(LinearLayoutManager.VERTICAL);
         mRecyclerView.setLayoutManager(layoutManager);
@@ -39,6 +47,7 @@ public class LinearActivity extends AppCompatActivity {
         mRecyclerView.setRefreshProgressStyle(ProgressStyle.BallSpinFadeLoader);
         mRecyclerView.setLoadingMoreProgressStyle(ProgressStyle.BallRotate);
         mRecyclerView.setArrowImageView(R.drawable.iconfont_downgrey);
+        mRecyclerView.setRefreshModeAutoLoad(true);
 
         View header = LayoutInflater.from(this).inflate(R.layout.recyclerview_header, (ViewGroup) findViewById(android.R.id.content), false);
         mRecyclerView.addHeaderView(header);
@@ -50,14 +59,14 @@ public class LinearActivity extends AppCompatActivity {
                 times = 0;
                 new Handler().postDelayed(new Runnable() {
                     public void run() {
-                        listData.clear();
-                        for (int i = 0; i < 15; i++) {
-                            listData.add("item" + i + "after " + refreshTime + " times of refresh");
+//                        listData.clear();
+                        for (int i = 5; i > 0; i--) {
+                            listData.addFirst("item" + (counter++) + "after " + refreshTime + " times of refresh");
                         }
                         mAdapter.notifyDataSetChanged();
                         mRecyclerView.refreshComplete();
+                        ((LinearLayoutManager) mRecyclerView.getLayoutManager()).scrollToPositionWithOffset(15, 0);
                     }
-
                 }, 1000);            //refresh data here
             }
 
@@ -88,19 +97,9 @@ public class LinearActivity extends AppCompatActivity {
             }
         });
 
-        listData = new ArrayList<String>();
-        mAdapter = new MyAdapter(listData);
+        listData = new LinkedList<>();
+        mAdapter = new MyAutoLoadAdapter(listData);
         mRecyclerView.setAdapter(mAdapter);
         mRecyclerView.refresh();
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case android.R.id.home:
-                onBackPressed();
-                return true;
-        }
-        return super.onOptionsItemSelected(item);
     }
 }
